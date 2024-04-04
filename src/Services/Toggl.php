@@ -62,8 +62,8 @@ class Toggl extends TimerService
 
     public function stopCurrentTimer()
     {
-        if ($timerId = $this->runningTimer()) {
-            $response = $this->client->stopTimeEntry($timerId);
+        if ($timer = $this->runningTimer()) {
+            $response = $this->client->stopTimeEntry($timer->id);
 
             if (! isset($response->id)) {
                 throw new Exception("Can't stop current running timer.", 1);
@@ -79,7 +79,7 @@ class Toggl extends TimerService
     {
         $timer = $this->client->getRunningTimeEntry();
 
-        return $timer->id ?? false;
+        return isset($timer->id) ? $timer : false;
     }
 
     public function continueTimer($timerId)

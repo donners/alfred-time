@@ -12,33 +12,28 @@ class Entrance extends Menu
 {
     public static function scriptFilter()
     {
-        ScriptFilter::add(
-            self::timerAction(),
-            self::setupWorkflow()
-        );
-    }
-
-    private static function timerAction()
-    {
         $serviceEnabled = Workflow::serviceEnabled();
-
         if (! $serviceEnabled) {
             return;
         }
-
-        if ($serviceEnabled->runningTimer()) {
-            return self::stopCurrentTimer();
+        if ($runningTimer = $serviceEnabled->runningTimer()) {
+            ScriptFilter::add(
+							self::startTimer(),
+							self::stopCurrentTimer($runningTimer),
+						);
+        } else {
+						ScriptFilter::add(
+							self::startTimer()
+						);
         }
-
-        return self::startTimer();
     }
 
-    private static function stopCurrentTimer()
+    private static function stopCurrentTimer($runningTimer)
     {
         return Item::create()
             ->uid('stop_timer')
-            ->title('Stop current timer')
-            ->subtitle('That timer is currently running!')
+            ->title('Stop "' . $runningTimer->description . '"')
+            ->subtitle(floor((time() + $runningTimer->duration) / 60) . ' mins')
             ->arg('do')
             ->variable('action', 'stop');
     }
@@ -54,7 +49,7 @@ class Entrance extends Menu
                         ->subtitle('Continue a timer')
                         ->arg('choose_timer')
                 )
-                ->arg('choose_project')
+								->arg('choose_project')
                 ->variable('timer_description', self::userInput());
         }
     }
